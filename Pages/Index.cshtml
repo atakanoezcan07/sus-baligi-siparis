@@ -1,0 +1,169 @@
+@page
+@model SusBaligiSiparis.Pages.IndexModel
+@{
+    ViewData["Title"] = "Sipariş Ver";
+}
+
+<h1>Sipariş Ver</h1>
+
+@if (Model.GonderildiMi)
+{
+    <div class="alert alert-success">
+        Siparişiniz alındı. En kısa sürede size dönüş yapılacaktır.
+    </div>
+    <a href="/" class="btn btn-outline-primary">Yeni Sipariş</a>
+}
+else
+{
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <form method="post" id="siparis-form">
+        <div class="mb-3" style="max-width: 20rem">
+            <label class="form-label">Vergi Numaranız *</label>
+            <div class="input-group">
+                <input type="text" asp-for="VergiNumarasi" id="vergi-no" class="form-control" placeholder="10 veya 11 haneli" required />
+                <button type="button" id="vergi-no-kontrol" class="btn btn-outline-secondary">Kontrol Et</button>
+            </div>
+            <div id="vergi-no-durum" class="form-text"></div>
+        </div>
+
+        <div id="musteri-bilgi" style="display: none;">
+            <div class="row g-2 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">İş Yeri İsmi *</label>
+                    <input type="text" asp-for="Unvan" id="unvan" class="form-control" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">İrtibat Kişisi</label>
+                    <input type="text" asp-for="IrtibatKisisi" id="irtibat-kisisi" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Telefon</label>
+                    <input type="text" asp-for="Telefon" id="telefon" class="form-control" />
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label">Adres</label>
+                    <input type="text" asp-for="Adres" id="adres" class="form-control" />
+                </div>
+            </div>
+
+            <div id="urun-listesi"></div>
+
+            <div class="mb-3" style="max-width: 30rem">
+                <label class="form-label">Not (opsiyonel)</label>
+                <textarea asp-for="Aciklama" id="aciklama" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- Honeypot: gerçek kullanıcılar bu alanı görmez -->
+            <div style="position: absolute; left: -9999px;" aria-hidden="true">
+                <input type="text" asp-for="WebSitesi" tabindex="-1" autocomplete="off" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Siparişi Gönder</button>
+        </div>
+    </form>
+}
+
+@section Scripts {
+    <script>
+        const varyantlar = @Html.Raw(Model.VaryantlarJson);
+        const kategoriler = @Html.Raw(Model.KategorilerJson);
+
+        const vergiNoInput = document.getElementById('vergi-no');
+        const kontrolBtn = document.getElementById('vergi-no-kontrol');
+        const durumDiv = document.getElementById('vergi-no-durum');
+        const musteriBilgi = document.getElementById('musteri-bilgi');
+        const unvanInput = document.getElementById('unvan');
+        const irtibatInput = document.getElementById('irtibat-kisisi');
+        const telefonInput = document.getElementById('telefon');
+        const adresInput = document.getElementById('adres');
+
+        async function vergiNoKontrolEt() {
+            const vergiNo = vergiNoInput.value.trim();
+            if (!/^\d{10,11}$/.test(vergiNo)) {
+                durumDiv.innerHTML = '<span class="text-danger">Vergi numarası 10 veya 11 haneli olmalı.</span>';
+                musteriBilgi.style.display = 'none';
+                return;
+            }
+
+            const yanit = await fetch('?handler=MusteriBul&vergiNo=' + encodeURIComponent(vergiNo));
+            const veri = await yanit.json();
+
+            if (veri.bulundu) {
+                durumDiv.innerHTML = '<span class="text-success">✓ Kayıtlı müşteri bulundu, bilgileriniz dolduruldu.</span>';
+                unvanInput.value = veri.unvan || '';
+                irtibatInput.value = veri.irtibatKisisi || '';
+                telefonInput.value = veri.telefon || '';
+                adresInput.value = veri.adres || '';
+                [unvanInput, irtibatInput, telefonInput, adresInput].forEach(el => el.readOnly = true);
+            } else {
+                durumDiv.innerHTML = '<span class="text-muted">Kayıtlı müşteri bulunamadı, yeni müşteri olarak devam edebilirsiniz.</span>';
+                [unvanInput, irtibatInput, telefonInput, adresInput].forEach(el => { el.readOnly = false; el.value = ''; });
+            }
+            musteriBilgi.style.display = 'block';
+        }
+
+        kontrolBtn.addEventListener('click', vergiNoKontrolEt);
+
+        function tlFormat(n) {
+            return n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+        }
+
+        function urunListesiOlustur() {
+            const govde = document.getElementById('urun-listesi');
+            let idx = 0;
+
+            kategoriler.forEach(kategori => {
+                const kategoriVaryantlari = varyantlar.filter(v => v.kategoriId === kategori.id);
+                if (kategoriVaryantlari.length === 0) return;
+
+                const baslik = document.createElement('h5');
+                baslik.className = 'mt-3';
+                baslik.textContent = kategori.ad;
+                govde.appendChild(baslik);
+
+                const table = document.createElement('table');
+                table.className = 'table table-sm';
+                const tbody = document.createElement('tbody');
+
+                kategoriVaryantlari.forEach(v => {
+                    const tr = document.createElement('tr');
+
+                    const tdAd = document.createElement('td');
+                    tdAd.textContent = (v.tur ? v.tur + ' - ' : '') + v.boy;
+                    tr.appendChild(tdAd);
+
+                    const tdFiyat = document.createElement('td');
+                    tdFiyat.className = 'text-end';
+                    tdFiyat.textContent = tlFormat(v.fiyat);
+                    tr.appendChild(tdFiyat);
+
+                    const tdMiktar = document.createElement('td');
+                    tdMiktar.style.width = '8rem';
+                    const miktarInput = document.createElement('input');
+                    miktarInput.type = 'number';
+                    miktarInput.min = '0';
+                    miktarInput.className = 'form-control form-control-sm';
+                    miktarInput.placeholder = '0';
+                    miktarInput.name = `Kalemler[${idx}].Miktar`;
+                    tdMiktar.appendChild(miktarInput);
+                    tr.appendChild(tdMiktar);
+
+                    const varyantIdInput = document.createElement('input');
+                    varyantIdInput.type = 'hidden';
+                    varyantIdInput.name = `Kalemler[${idx}].VaryantId`;
+                    varyantIdInput.value = v.id;
+                    tr.appendChild(varyantIdInput);
+
+                    idx++;
+                    tbody.appendChild(tr);
+                });
+
+                table.appendChild(tbody);
+                govde.appendChild(table);
+            });
+        }
+
+        urunListesiOlustur();
+    </script>
+}
