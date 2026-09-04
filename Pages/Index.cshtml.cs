@@ -11,7 +11,11 @@ namespace SusBaligiSiparis.Pages;
 public class KalemGiris
 {
     public int VaryantId { get; set; }
-    public int Miktar { get; set; }
+
+    // Nullable: ürün listesindeki her satır için bir input alanı vardır, müşterinin
+    // istemediği ürünlerin miktarı boş kalır - boş string int'e bağlanamaz, bu yüzden
+    // nullable olmalı (aksi halde her boş satır için model binding hatası oluşur).
+    public int? Miktar { get; set; }
 }
 
 public class VaryantJson
@@ -34,7 +38,6 @@ public class IndexModel : PageModel
     public List<TurKategorisi> KategoriSecenekleri { get; set; } = new();
     public string VaryantlarJson { get; set; } = "[]";
     public string KategorilerJson { get; set; } = "[]";
-    public bool GonderildiMi { get; set; }
 
     [BindProperty]
     public string VergiNumarasi { get; set; } = string.Empty;
@@ -113,19 +116,18 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         // Honeypot dolu geldiyse sessizce görmezden gel (bot varsayımı) - kullanıcıya hata
-        // göstermeden aynı sayfayı normal görünümle döndür.
+        // göstermeden normal görünümü tekrar göster.
         if (!string.IsNullOrWhiteSpace(WebSitesi))
         {
             await LoadListsAsync();
-            GonderildiMi = true;
             return Page();
         }
 
         var vergiNo = (VergiNumarasi ?? string.Empty).Trim();
         var gecerliKalemler = (Kalemler ?? new())
-            .Where(k => k.VaryantId != 0 && k.Miktar > 0)
+            .Where(k => k.VaryantId != 0 && k.Miktar.GetValueOrDefault() > 0)
             .Take(MaksimumKalemSayisi)
-            .Select(k => new KalemGiris { VaryantId = k.VaryantId, Miktar = Math.Min(k.Miktar, MaksimumMiktar) })
+            .Select(k => new KalemGiris { VaryantId = k.VaryantId, Miktar = Math.Min(k.Miktar!.Value, MaksimumMiktar) })
             .ToList();
 
         if (!VergiNoDeseni.IsMatch(vergiNo))
@@ -170,7 +172,7 @@ public class IndexModel : PageModel
             siparis.Satirlar.Add(new SiparisSatir
             {
                 VaryantId = varyant.Id,
-                Miktar = k.Miktar,
+                Miktar = k.Miktar!.Value,
                 // Fiyat her zaman canlı Varyant'tan hesaplanır, istemciden asla güvenilmez.
                 BirimFiyat = varyant.SatisFiyat,
             });
@@ -186,8 +188,6 @@ public class IndexModel : PageModel
         _db.Siparisler.Add(siparis);
         await _db.SaveChangesAsync();
 
-        GonderildiMi = true;
-        await LoadListsAsync();
-        return Page();
+        return RedirectToPage("Onay", new { id = siparis.Id });
     }
 }

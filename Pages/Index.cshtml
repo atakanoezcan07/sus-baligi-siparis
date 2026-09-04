@@ -6,63 +6,81 @@
 
 <h1>Sipariş Ver</h1>
 
-@if (Model.GonderildiMi)
-{
-    <div class="alert alert-success">
-        Siparişiniz alındı. En kısa sürede size dönüş yapılacaktır.
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form method="post" id="siparis-form">
+    <div class="mb-3" style="max-width: 20rem">
+        <label class="form-label">Vergi Numaranız *</label>
+        <div class="input-group">
+            <input type="text" asp-for="VergiNumarasi" id="vergi-no" class="form-control" placeholder="10 veya 11 haneli" required />
+            <button type="button" id="vergi-no-kontrol" class="btn btn-outline-secondary">Kontrol Et</button>
+        </div>
+        <div id="vergi-no-durum" class="form-text"></div>
     </div>
-    <a href="/" class="btn btn-outline-primary">Yeni Sipariş</a>
-}
-else
-{
-    <div asp-validation-summary="All" class="text-danger"></div>
 
-    <form method="post" id="siparis-form">
-        <div class="mb-3" style="max-width: 20rem">
-            <label class="form-label">Vergi Numaranız *</label>
-            <div class="input-group">
-                <input type="text" asp-for="VergiNumarasi" id="vergi-no" class="form-control" placeholder="10 veya 11 haneli" required />
-                <button type="button" id="vergi-no-kontrol" class="btn btn-outline-secondary">Kontrol Et</button>
+    <div id="musteri-bilgi" style="display: none;">
+        <div class="row g-2 mb-4">
+            <div class="col-md-4">
+                <label class="form-label">İş Yeri İsmi *</label>
+                <input type="text" asp-for="Unvan" id="unvan" class="form-control" required />
             </div>
-            <div id="vergi-no-durum" class="form-text"></div>
+            <div class="col-md-4">
+                <label class="form-label">İrtibat Kişisi</label>
+                <input type="text" asp-for="IrtibatKisisi" id="irtibat-kisisi" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Telefon</label>
+                <input type="text" asp-for="Telefon" id="telefon" class="form-control" />
+            </div>
+            <div class="col-md-8">
+                <label class="form-label">Adres</label>
+                <input type="text" asp-for="Adres" id="adres" class="form-control" />
+            </div>
         </div>
 
-        <div id="musteri-bilgi" style="display: none;">
-            <div class="row g-2 mb-3">
-                <div class="col-md-4">
-                    <label class="form-label">İş Yeri İsmi *</label>
-                    <input type="text" asp-for="Unvan" id="unvan" class="form-control" required />
+        <div class="row">
+            <div class="col-lg-8">
+                <h4>Ürünler</h4>
+                <div class="mb-3" style="max-width: 20rem">
+                    <input type="text" id="urun-ara" class="form-control" placeholder="Ürün ara..." autocomplete="off" />
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">İrtibat Kişisi</label>
-                    <input type="text" asp-for="IrtibatKisisi" id="irtibat-kisisi" class="form-control" />
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Telefon</label>
-                    <input type="text" asp-for="Telefon" id="telefon" class="form-control" />
-                </div>
-                <div class="col-md-8">
-                    <label class="form-label">Adres</label>
-                    <input type="text" asp-for="Adres" id="adres" class="form-control" />
-                </div>
+                <div id="urun-katalogu"></div>
             </div>
 
-            <div id="urun-listesi"></div>
+            <div class="col-lg-4">
+                <div class="card sticky-top" style="top: 1rem;">
+                    <div class="card-header">
+                        <strong>Sepetiniz</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="sepet-bos" class="p-3 text-muted">Sepetiniz boş.</div>
+                        <table class="table table-sm mb-0" id="sepet-tablo" style="display: none;">
+                            <tbody id="sepet-govde"></tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center">
+                        <strong>Toplam</strong>
+                        <strong id="sepet-toplam">0,00 ₺</strong>
+                    </div>
+                </div>
 
-            <div class="mb-3" style="max-width: 30rem">
-                <label class="form-label">Not (opsiyonel)</label>
-                <textarea asp-for="Aciklama" id="aciklama" class="form-control" rows="2"></textarea>
+                <div id="sepet-hidden-inputs"></div>
+
+                <div class="mb-3 mt-3">
+                    <label class="form-label">Not (opsiyonel)</label>
+                    <textarea asp-for="Aciklama" id="aciklama" class="form-control" rows="2"></textarea>
+                </div>
+
+                <!-- Honeypot: gerçek kullanıcılar bu alanı görmez -->
+                <div style="position: absolute; left: -9999px;" aria-hidden="true">
+                    <input type="text" asp-for="WebSitesi" tabindex="-1" autocomplete="off" />
+                </div>
+
+                <button type="submit" id="gonder-btn" class="btn btn-primary w-100" disabled>Siparişi Gönder</button>
             </div>
-
-            <!-- Honeypot: gerçek kullanıcılar bu alanı görmez -->
-            <div style="position: absolute; left: -9999px;" aria-hidden="true">
-                <input type="text" asp-for="WebSitesi" tabindex="-1" autocomplete="off" />
-            </div>
-
-            <button type="submit" class="btn btn-primary">Siparişi Gönder</button>
         </div>
-    </form>
-}
+    </div>
+</form>
 
 @section Scripts {
     <script>
@@ -109,28 +127,133 @@ else
             return n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
         }
 
-        function urunListesiOlustur() {
-            const govde = document.getElementById('urun-listesi');
+        // --- Sepet (cart) durumu: varyantId -> {tur, boy, fiyat, miktar} ---
+        const sepet = new Map();
+
+        function urunAdi(v) {
+            return (v.tur ? v.tur + ' - ' : '') + v.boy;
+        }
+
+        function sepeteEkle(varyantId, miktar) {
+            const v = varyantlar.find(x => x.id === varyantId);
+            if (!v) return;
+            const mevcut = sepet.get(varyantId);
+            if (mevcut) {
+                mevcut.miktar += miktar;
+            } else {
+                sepet.set(varyantId, { tur: v.tur, boy: v.boy, fiyat: v.fiyat, miktar });
+            }
+            sepetRender();
+        }
+
+        function sepettenCikar(varyantId) {
+            sepet.delete(varyantId);
+            sepetRender();
+        }
+
+        function sepetMiktarGuncelle(varyantId, miktar) {
+            const kalem = sepet.get(varyantId);
+            if (!kalem) return;
+            if (miktar <= 0) {
+                sepet.delete(varyantId);
+            } else {
+                kalem.miktar = miktar;
+            }
+            sepetRender();
+        }
+
+        function sepetRender() {
+            const govde = document.getElementById('sepet-govde');
+            const tablo = document.getElementById('sepet-tablo');
+            const bos = document.getElementById('sepet-bos');
+            const hiddenAlan = document.getElementById('sepet-hidden-inputs');
+            const gonderBtn = document.getElementById('gonder-btn');
+
+            govde.innerHTML = '';
+            hiddenAlan.innerHTML = '';
+
+            if (sepet.size === 0) {
+                tablo.style.display = 'none';
+                bos.style.display = 'block';
+                gonderBtn.disabled = true;
+                document.getElementById('sepet-toplam').textContent = tlFormat(0);
+                return;
+            }
+
+            tablo.style.display = 'table';
+            bos.style.display = 'none';
+            gonderBtn.disabled = false;
+
+            let genelToplam = 0;
             let idx = 0;
+            sepet.forEach((kalem, varyantId) => {
+                const tutar = kalem.fiyat * kalem.miktar;
+                genelToplam += tutar;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="small">${urunAdi(kalem)}</div>
+                        <div class="text-muted small">${tlFormat(kalem.fiyat)} x
+                            <input type="number" min="1" value="${kalem.miktar}" class="form-control form-control-sm d-inline-block sepet-miktar" style="width: 4rem;" />
+                        </div>
+                    </td>
+                    <td class="text-end align-middle">${tlFormat(tutar)}</td>
+                    <td class="align-middle">
+                        <button type="button" class="btn btn-sm btn-outline-danger sepet-sil">&times;</button>
+                    </td>
+                `;
+                tr.querySelector('.sepet-miktar').addEventListener('change', (e) => {
+                    sepetMiktarGuncelle(varyantId, parseInt(e.target.value) || 0);
+                });
+                tr.querySelector('.sepet-sil').addEventListener('click', () => sepettenCikar(varyantId));
+                govde.appendChild(tr);
+
+                const varyantIdInput = document.createElement('input');
+                varyantIdInput.type = 'hidden';
+                varyantIdInput.name = `Kalemler[${idx}].VaryantId`;
+                varyantIdInput.value = varyantId;
+                hiddenAlan.appendChild(varyantIdInput);
+
+                const miktarInput = document.createElement('input');
+                miktarInput.type = 'hidden';
+                miktarInput.name = `Kalemler[${idx}].Miktar`;
+                miktarInput.value = kalem.miktar;
+                hiddenAlan.appendChild(miktarInput);
+
+                idx++;
+            });
+
+            document.getElementById('sepet-toplam').textContent = tlFormat(genelToplam);
+        }
+
+        // --- Ürün kataloğu ---
+        function urunKataloguOlustur(filtre) {
+            const kok = document.getElementById('urun-katalogu');
+            kok.innerHTML = '';
+            const q = (filtre || '').trim().toLocaleLowerCase('tr-TR');
 
             kategoriler.forEach(kategori => {
-                const kategoriVaryantlari = varyantlar.filter(v => v.kategoriId === kategori.id);
+                let kategoriVaryantlari = varyantlar.filter(v => v.kategoriId === kategori.id);
+                if (q) {
+                    kategoriVaryantlari = kategoriVaryantlari.filter(v => urunAdi(v).toLocaleLowerCase('tr-TR').includes(q));
+                }
                 if (kategoriVaryantlari.length === 0) return;
 
                 const baslik = document.createElement('h5');
                 baslik.className = 'mt-3';
                 baslik.textContent = kategori.ad;
-                govde.appendChild(baslik);
+                kok.appendChild(baslik);
 
                 const table = document.createElement('table');
-                table.className = 'table table-sm';
+                table.className = 'table table-sm align-middle';
                 const tbody = document.createElement('tbody');
 
                 kategoriVaryantlari.forEach(v => {
                     const tr = document.createElement('tr');
 
                     const tdAd = document.createElement('td');
-                    tdAd.textContent = (v.tur ? v.tur + ' - ' : '') + v.boy;
+                    tdAd.textContent = urunAdi(v);
                     tr.appendChild(tdAd);
 
                     const tdFiyat = document.createElement('td');
@@ -139,31 +262,38 @@ else
                     tr.appendChild(tdFiyat);
 
                     const tdMiktar = document.createElement('td');
-                    tdMiktar.style.width = '8rem';
+                    tdMiktar.style.width = '6rem';
                     const miktarInput = document.createElement('input');
                     miktarInput.type = 'number';
-                    miktarInput.min = '0';
+                    miktarInput.min = '1';
+                    miktarInput.value = '1';
                     miktarInput.className = 'form-control form-control-sm';
-                    miktarInput.placeholder = '0';
-                    miktarInput.name = `Kalemler[${idx}].Miktar`;
                     tdMiktar.appendChild(miktarInput);
                     tr.appendChild(tdMiktar);
 
-                    const varyantIdInput = document.createElement('input');
-                    varyantIdInput.type = 'hidden';
-                    varyantIdInput.name = `Kalemler[${idx}].VaryantId`;
-                    varyantIdInput.value = v.id;
-                    tr.appendChild(varyantIdInput);
+                    const tdEkle = document.createElement('td');
+                    const ekleBtn = document.createElement('button');
+                    ekleBtn.type = 'button';
+                    ekleBtn.className = 'btn btn-sm btn-outline-primary';
+                    ekleBtn.textContent = 'Sepete Ekle';
+                    ekleBtn.addEventListener('click', () => {
+                        const miktar = parseInt(miktarInput.value) || 1;
+                        sepeteEkle(v.id, miktar);
+                    });
+                    tdEkle.appendChild(ekleBtn);
+                    tr.appendChild(tdEkle);
 
-                    idx++;
                     tbody.appendChild(tr);
                 });
 
                 table.appendChild(tbody);
-                govde.appendChild(table);
+                kok.appendChild(table);
             });
         }
 
-        urunListesiOlustur();
+        document.getElementById('urun-ara').addEventListener('input', (e) => urunKataloguOlustur(e.target.value));
+
+        urunKataloguOlustur('');
+        sepetRender();
     </script>
 }

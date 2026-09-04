@@ -1,0 +1,73 @@
+@page
+@model SusBaligiSiparis.Pages.SorgulaModel
+@{
+    ViewData["Title"] = "Sipariş Durumu Sorgula";
+}
+
+<h1>Sipariş Durumu Sorgula</h1>
+
+<div class="mb-3" style="max-width: 20rem">
+    <label class="form-label">Vergi Numaranız</label>
+    <div class="input-group">
+        <input type="text" id="vergi-no" class="form-control" placeholder="10 veya 11 haneli" />
+        <button type="button" id="sorgula-btn" class="btn btn-primary">Sorgula</button>
+    </div>
+</div>
+
+<div id="sonuc-alani"></div>
+
+@section Scripts {
+    <script>
+        const vergiNoInput = document.getElementById('vergi-no');
+        const sorgulaBtn = document.getElementById('sorgula-btn');
+        const sonucAlani = document.getElementById('sonuc-alani');
+
+        const durumEtiketleri = {
+            'Beklemede': { metin: 'Beklemede', sinif: 'text-warning' },
+            'Onaylandi': { metin: 'Onaylandı', sinif: 'text-success' },
+            'Reddedildi': { metin: 'Reddedildi', sinif: 'text-danger' },
+        };
+
+        function tlFormat(n) {
+            return n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+        }
+
+        async function sorgula() {
+            const vergiNo = vergiNoInput.value.trim();
+            if (!/^\d{10,11}$/.test(vergiNo)) {
+                sonucAlani.innerHTML = '<div class="alert alert-danger">Vergi numarası 10 veya 11 haneli olmalı.</div>';
+                return;
+            }
+
+            const yanit = await fetch('?handler=Siparislerim&vergiNo=' + encodeURIComponent(vergiNo));
+            const veri = await yanit.json();
+
+            if (veri.siparisler.length === 0) {
+                sonucAlani.innerHTML = '<div class="alert alert-info">Bu vergi numarasına ait sipariş bulunamadı.</div>';
+                return;
+            }
+
+            let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr>' +
+                '<th>Sipariş No</th><th>Tarih</th><th>Ürün Sayısı</th><th class="text-end">Toplam</th><th>Durum</th>' +
+                '</tr></thead><tbody>';
+
+            veri.siparisler.forEach(s => {
+                const tarih = new Date(s.tarih).toLocaleString('tr-TR');
+                const etiket = durumEtiketleri[s.durum] || { metin: s.durum, sinif: '' };
+                html += `<tr>
+                    <td>#${s.id}</td>
+                    <td>${tarih}</td>
+                    <td>${s.urunSayisi}</td>
+                    <td class="text-end">${tlFormat(s.toplam)}</td>
+                    <td class="fw-bold ${etiket.sinif}">${etiket.metin}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            sonucAlani.innerHTML = html;
+        }
+
+        sorgulaBtn.addEventListener('click', sorgula);
+        vergiNoInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sorgula(); });
+    </script>
+}

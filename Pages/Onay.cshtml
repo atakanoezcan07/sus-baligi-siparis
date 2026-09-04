@@ -1,0 +1,50 @@
+@page "{id:int}"
+@model SusBaligiSiparis.Pages.OnayModel
+@{
+    ViewData["Title"] = "Sipariş Alındı";
+}
+
+<div class="alert alert-success">
+    <h4 class="alert-heading">Siparişiniz alındı!</h4>
+    <p class="mb-0">Sipariş No: <strong>#@Model.Siparis!.Id</strong> — en kısa sürede size dönüş yapılacaktır.</p>
+</div>
+
+<div class="table-responsive" style="max-width: 40rem">
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Ürün</th>
+            <th class="text-end">Miktar</th>
+            <th class="text-end">Fiyat</th>
+            <th class="text-end">Tutar</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var satir in Model.Siparis.Satirlar)
+        {
+            <tr>
+                <td>
+                    @satir.Varyant?.TurKategorisi?.Ad
+                    @if (!string.IsNullOrWhiteSpace(satir.Varyant?.Tur))
+                    {
+                        <text> - @satir.Varyant.Tur</text>
+                    }
+                    - @satir.Varyant?.Boy
+                </td>
+                <td class="text-end">@satir.Miktar</td>
+                <td class="text-end">@satir.BirimFiyat.ToString("N2") ₺</td>
+                <td class="text-end">@((satir.Miktar * satir.BirimFiyat).ToString("N2")) ₺</td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3" class="text-end fw-bold">Toplam</td>
+            <td class="text-end fw-bold">@Model.Siparis.Satirlar.Sum(s => s.Miktar * s.BirimFiyat).ToString("N2") ₺</td>
+        </tr>
+    </tfoot>
+</table>
+</div>
+
+<a asp-page="/Index" class="btn btn-outline-primary">Yeni Sipariş</a>
+<a asp-page="/Sorgula" class="btn btn-outline-secondary">Sipariş Durumu Sorgula</a>
