@@ -16,8 +16,8 @@ public static class FiyatListesiExcelService
         var ws = workbook.Worksheets.Add(SayfaAdi);
 
         ws.Cell(1, 1).Value = "VaryantId";
-        ws.Cell(1, 2).Value = "Kategori";
-        ws.Cell(1, 3).Value = "Kod";
+        ws.Cell(1, 2).Value = "Kod";
+        ws.Cell(1, 3).Value = "Kategori";
         ws.Cell(1, 4).Value = "Tür";
         ws.Cell(1, 5).Value = "Boy";
         ws.Cell(1, 6).Value = "Fiyat";
@@ -50,8 +50,8 @@ public static class FiyatListesiExcelService
             foreach (var v in varyantlar)
             {
                 ws.Cell(satir, 1).Value = v.Id;
-                ws.Cell(satir, 2).Value = kategori.Ad;
-                ws.Cell(satir, 3).Value = v.Kod ?? "";
+                ws.Cell(satir, 2).Value = v.Kod ?? "";
+                ws.Cell(satir, 3).Value = kategori.Ad;
                 ws.Cell(satir, 4).Value = v.Tur ?? "";
                 ws.Cell(satir, 5).Value = v.Boy;
                 var fiyatHucre = ws.Cell(satir, 6);
@@ -113,7 +113,6 @@ public static class FiyatListesiExcelService
         ws.Columns().AdjustToContents();
         ws.Row(1).Height = 20;
         ws.SheetView.FreezeRows(1);
-        ws.SheetView.FreezeColumns(2);
 
         using var stream = new MemoryStream();
         workbook.SaveAs(stream);
