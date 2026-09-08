@@ -59,11 +59,30 @@ public class SorgulaModel : PageModel
             var urunSayisi = satis?.Satirlar.Count ?? s.Satirlar.Count;
             var toplam = satis?.Satirlar.Sum(x => x.Tutar) ?? s.Satirlar.Sum(x => x.Miktar * x.BirimFiyat);
             var duzenlenebilir = s.Durum != SiparisDurumu.Reddedildi && (satis == null || (satis.Beklenen && !satis.Iptal));
+
+            // Müşteriye iç durumların (Beklemede/Onaylandı) nüansı değil, üç sade karşılığı
+            // gösterilir: sipariş henüz bir satışa dönüşmediyse/dönüştüyse ama hâlâ Beklenen ise
+            // Bekleme; gerçek bir satışa dönüştüyse Gerçekleşti; reddedildiyse ya da dönüştüğü
+            // satış sonradan iptal edildiyse İptal Edildi.
+            string durum;
+            if (s.Durum == SiparisDurumu.Reddedildi || (satis != null && satis.Iptal))
+            {
+                durum = "Sipariş İptal Edildi";
+            }
+            else if (satis != null && !satis.Beklenen)
+            {
+                durum = "Sipariş Gerçekleştirildi";
+            }
+            else
+            {
+                durum = "Bekleme";
+            }
+
             return new
             {
                 id = s.Id,
                 tarih = s.OlusturmaTarihi,
-                durum = s.Durum.ToString(),
+                durum,
                 urunSayisi,
                 toplam,
                 duzenlenebilir,
