@@ -1,10 +1,10 @@
 @page
 @model SusBaligiSiparis.Pages.SorgulaModel
 @{
-    ViewData["Title"] = "Sipariş Durumu Sorgula";
+    ViewData["Title"] = "Sipariş Durumu Sorgula ya da Düzenle";
 }
 
-<h1>Sipariş Durumu Sorgula</h1>
+<h1>Sipariş Durumu Sorgula ya da Düzenle</h1>
 
 <div class="mb-3" style="max-width: 20rem">
     <label class="form-label">Vergi Numaranız</label>
@@ -48,18 +48,22 @@
             }
 
             let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr>' +
-                '<th>Sipariş No</th><th>Tarih</th><th>Ürün Sayısı</th><th class="text-end">Toplam</th><th>Durum</th>' +
+                '<th>Sipariş No</th><th>Tarih</th><th>Ürün Sayısı</th><th class="text-end">Toplam</th><th>Durum</th><th></th>' +
                 '</tr></thead><tbody>';
 
             veri.siparisler.forEach(s => {
                 const tarih = new Date(s.tarih).toLocaleString('tr-TR');
                 const etiket = durumEtiketleri[s.durum] || { metin: s.durum, sinif: '' };
+                const duzenleLink = s.duzenlenebilir
+                    ? `<a href="/Duzenle/${s.id}?vergiNo=${encodeURIComponent(vergiNo)}" class="btn btn-sm btn-outline-primary">Düzenle</a>`
+                    : '';
                 html += `<tr>
                     <td>#${s.id}</td>
                     <td>${tarih}</td>
                     <td>${s.urunSayisi}</td>
                     <td class="text-end">${tlFormat(s.toplam)}</td>
                     <td class="fw-bold ${etiket.sinif}">${etiket.metin}</td>
+                    <td>${duzenleLink}</td>
                 </tr>`;
             });
 

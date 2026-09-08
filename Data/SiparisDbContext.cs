@@ -19,6 +19,11 @@ public class SiparisDbContext : DbContext
     public DbSet<Siparis> Siparisler => Set<Siparis>();
     public DbSet<SiparisSatir> SiparisSatirlari => Set<SiparisSatir>();
 
+    // Sadece Beklenen satışların kalemleri, müşteri kendi siparişini düzenlerken bu uygulama
+    // tarafından güncellenir (bkz. Pages/Duzenle) - yeni Satis satırı asla oluşturulmaz.
+    public DbSet<Satis> Satislar => Set<Satis>();
+    public DbSet<SatisSatir> SatisSatirlari => Set<SatisSatir>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -35,6 +40,8 @@ public class SiparisDbContext : DbContext
         builder.Entity<Varyant>().ToTable("Varyantlar");
         builder.Entity<Siparis>().ToTable("Siparisler");
         builder.Entity<SiparisSatir>().ToTable("SiparisSatirlari");
+        builder.Entity<Satis>().ToTable("Satislar");
+        builder.Entity<SatisSatir>().ToTable("SatisSatirlari");
 
         builder.Entity<Varyant>()
             .HasOne(v => v.TurKategorisi)
@@ -47,6 +54,16 @@ public class SiparisDbContext : DbContext
             .HasForeignKey(s => s.SiparisId);
 
         builder.Entity<SiparisSatir>()
+            .HasOne(s => s.Varyant)
+            .WithMany()
+            .HasForeignKey(s => s.VaryantId);
+
+        builder.Entity<SatisSatir>()
+            .HasOne(s => s.Satis)
+            .WithMany(s => s.Satirlar)
+            .HasForeignKey(s => s.SatisId);
+
+        builder.Entity<SatisSatir>()
             .HasOne(s => s.Varyant)
             .WithMany()
             .HasForeignKey(s => s.VaryantId);
