@@ -9,8 +9,8 @@
 <div asp-validation-summary="All" class="text-danger"></div>
 
 <form method="post" id="siparis-form">
-    <div class="mb-3" style="max-width: 20rem">
-        <label class="form-label">Vergi Numaranız *</label>
+    <div class="mb-3" style="max-width: 24rem">
+        <label class="form-label">TC Kimlik No / Vergi Numaranız *</label>
         <div class="input-group">
             <input type="text" asp-for="VergiNumarasi" id="vergi-no" class="form-control" placeholder="10 veya 11 haneli" required />
             <button type="button" id="vergi-no-kontrol" class="btn btn-outline-secondary">Kontrol Et</button>
@@ -19,23 +19,9 @@
     </div>
 
     <div id="musteri-bilgi" style="display: none;">
-        <div class="row g-2 mb-4">
-            <div class="col-md-4">
-                <label class="form-label">İş Yeri İsmi *</label>
-                <input type="text" asp-for="Unvan" id="unvan" class="form-control" required />
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">İrtibat Kişisi</label>
-                <input type="text" asp-for="IrtibatKisisi" id="irtibat-kisisi" class="form-control" />
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Telefon</label>
-                <input type="text" asp-for="Telefon" id="telefon" class="form-control" />
-            </div>
-            <div class="col-md-8">
-                <label class="form-label">Adres</label>
-                <input type="text" asp-for="Adres" id="adres" class="form-control" />
-            </div>
+        <div class="mb-4" style="max-width: 24rem">
+            <label class="form-label">İş Yeri İsmi</label>
+            <input type="text" id="unvan" class="form-control" readonly />
         </div>
 
         <div class="row">
@@ -92,14 +78,11 @@
         const durumDiv = document.getElementById('vergi-no-durum');
         const musteriBilgi = document.getElementById('musteri-bilgi');
         const unvanInput = document.getElementById('unvan');
-        const irtibatInput = document.getElementById('irtibat-kisisi');
-        const telefonInput = document.getElementById('telefon');
-        const adresInput = document.getElementById('adres');
 
         async function vergiNoKontrolEt() {
             const vergiNo = vergiNoInput.value.trim();
             if (!/^\d{10,11}$/.test(vergiNo)) {
-                durumDiv.innerHTML = '<span class="text-danger">Vergi numarası 10 veya 11 haneli olmalı.</span>';
+                durumDiv.innerHTML = '<span class="text-danger">TC Kimlik No veya Vergi Numarası 10 veya 11 haneli olmalı.</span>';
                 musteriBilgi.style.display = 'none';
                 return;
             }
@@ -108,17 +91,13 @@
             const veri = await yanit.json();
 
             if (veri.bulundu) {
-                durumDiv.innerHTML = '<span class="text-success">✓ Kayıtlı müşteri bulundu, bilgileriniz dolduruldu.</span>';
+                durumDiv.innerHTML = '<span class="text-success">✓ Kayıtlı müşteri bulundu.</span>';
                 unvanInput.value = veri.unvan || '';
-                irtibatInput.value = veri.irtibatKisisi || '';
-                telefonInput.value = veri.telefon || '';
-                adresInput.value = veri.adres || '';
-                [unvanInput, irtibatInput, telefonInput, adresInput].forEach(el => el.readOnly = true);
+                musteriBilgi.style.display = 'block';
             } else {
-                durumDiv.innerHTML = '<span class="text-muted">Kayıtlı müşteri bulunamadı, yeni müşteri olarak devam edebilirsiniz.</span>';
-                [unvanInput, irtibatInput, telefonInput, adresInput].forEach(el => { el.readOnly = false; el.value = ''; });
+                durumDiv.innerHTML = '<span class="text-danger">Kayıtlı müşteri bulunamadı. Sipariş verebilmek için önce müşteri kaydınızın oluşturulmuş olması gerekir, lütfen bizimle iletişime geçin.</span>';
+                musteriBilgi.style.display = 'none';
             }
-            musteriBilgi.style.display = 'block';
         }
 
         kontrolBtn.addEventListener('click', vergiNoKontrolEt);

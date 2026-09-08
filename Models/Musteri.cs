@@ -11,5 +11,6 @@ public class Musteri
     public string? Telefon { get; set; }
     public string? Adres { get; set; }
     public string? VergiNumarasi { get; set; }
+    public string? TcKimlikNo { get; set; }
     public bool Aktif { get; set; }
 }

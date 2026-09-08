@@ -43,18 +43,6 @@ public class IndexModel : PageModel
     public string VergiNumarasi { get; set; } = string.Empty;
 
     [BindProperty]
-    public string Unvan { get; set; } = string.Empty;
-
-    [BindProperty]
-    public string? IrtibatKisisi { get; set; }
-
-    [BindProperty]
-    public string? Telefon { get; set; }
-
-    [BindProperty]
-    public string? Adres { get; set; }
-
-    [BindProperty]
     public string? Aciklama { get; set; }
 
     // Honeypot: gerçek kullanıcılar görmez/doldurmaz, botlar genelde doldurur.
@@ -97,20 +85,14 @@ public class IndexModel : PageModel
             return new JsonResult(new { bulundu = false });
         }
 
-        var musteri = await _db.Musteriler.FirstOrDefaultAsync(m => m.VergiNumarasi == vergiNo && m.Aktif);
+        var musteri = await _db.Musteriler
+            .FirstOrDefaultAsync(m => m.Aktif && (m.VergiNumarasi == vergiNo || m.TcKimlikNo == vergiNo));
         if (musteri == null)
         {
             return new JsonResult(new { bulundu = false });
         }
 
-        return new JsonResult(new
-        {
-            bulundu = true,
-            unvan = musteri.Unvan,
-            irtibatKisisi = musteri.IrtibatKisisi,
-            telefon = musteri.Telefon,
-            adres = musteri.Adres,
-        });
+        return new JsonResult(new { bulundu = true, unvan = musteri.Unvan });
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -132,11 +114,7 @@ public class IndexModel : PageModel
 
         if (!VergiNoDeseni.IsMatch(vergiNo))
         {
-            ModelState.AddModelError(string.Empty, "Vergi numarası 10 veya 11 haneli olmalı.");
-        }
-        if (string.IsNullOrWhiteSpace(Unvan))
-        {
-            ModelState.AddModelError(string.Empty, "İş yeri ismi girilmeli.");
+            ModelState.AddModelError(string.Empty, "TC Kimlik No veya Vergi Numarası 10 veya 11 haneli olmalı.");
         }
         if (gecerliKalemler.Count == 0)
         {
@@ -149,17 +127,26 @@ public class IndexModel : PageModel
             return Page();
         }
 
-        // MusteriId, gönderilen değer güvenilmeden, vergi numarasından tekrar (sunucuda) bulunur.
-        var eslesenMusteri = await _db.Musteriler.FirstOrDefaultAsync(m => m.VergiNumarasi == vergiNo && m.Aktif);
+        // MusteriId, gönderilen değer güvenilmeden, kimlik numarasından tekrar (sunucuda) bulunur.
+        // Kayıtlı müşterisi olmayan biri sipariş veremez - Unvan/İrtibat/Telefon/Adres artık
+        // yalnızca eşleşen müşteriden gelir, elle girilemez.
+        var eslesenMusteri = await _db.Musteriler
+            .FirstOrDefaultAsync(m => m.Aktif && (m.VergiNumarasi == vergiNo || m.TcKimlikNo == vergiNo));
+        if (eslesenMusteri == null)
+        {
+            ModelState.AddModelError(string.Empty, "Kayıtlı müşteri bulunamadı. Sipariş verebilmek için önce müşteri kaydınızın oluşturulmuş olması gerekir.");
+            await LoadListsAsync();
+            return Page();
+        }
 
         var siparis = new Siparis
         {
             VergiNumarasi = vergiNo,
-            MusteriId = eslesenMusteri?.Id,
-            Unvan = Unvan.Trim(),
-            IrtibatKisisi = IrtibatKisisi,
-            Telefon = Telefon,
-            Adres = Adres,
+            MusteriId = eslesenMusteri.Id,
+            Unvan = eslesenMusteri.Unvan,
+            IrtibatKisisi = eslesenMusteri.IrtibatKisisi,
+            Telefon = eslesenMusteri.Telefon,
+            Adres = eslesenMusteri.Adres,
             Aciklama = Aciklama,
             Durum = SiparisDurumu.Beklemede,
         };
