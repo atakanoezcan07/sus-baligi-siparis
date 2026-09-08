@@ -7,7 +7,7 @@
 <h1>Sipariş Durumu Sorgula ya da Düzenle</h1>
 
 <div class="mb-3" style="max-width: 20rem">
-    <label class="form-label">Vergi Numaranız</label>
+    <label class="form-label">TC Kimlik No / Vergi Numaranız</label>
     <div class="input-group">
         <input type="text" id="vergi-no" class="form-control" placeholder="10 veya 11 haneli" />
         <button type="button" id="sorgula-btn" class="btn btn-primary">Sorgula</button>
@@ -35,7 +35,7 @@
         async function sorgula() {
             const vergiNo = vergiNoInput.value.trim();
             if (!/^\d{10,11}$/.test(vergiNo)) {
-                sonucAlani.innerHTML = '<div class="alert alert-danger">Vergi numarası 10 veya 11 haneli olmalı.</div>';
+                sonucAlani.innerHTML = '<div class="alert alert-danger">TC Kimlik No veya Vergi Numarası 10 veya 11 haneli olmalı.</div>';
                 return;
             }
 
@@ -43,7 +43,7 @@
             const veri = await yanit.json();
 
             if (veri.siparisler.length === 0) {
-                sonucAlani.innerHTML = '<div class="alert alert-info">Bu vergi numarasına ait sipariş bulunamadı.</div>';
+                sonucAlani.innerHTML = '<div class="alert alert-info">Bu numaraya ait sipariş bulunamadı.</div>';
                 return;
             }
 

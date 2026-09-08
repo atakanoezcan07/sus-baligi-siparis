@@ -46,6 +46,18 @@ public class DuzenleModel : PageModel
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
 
+    // Sahiplik, sipariş verildiği anda yazılan ham metinle değil (müşteri o gün Vergi No, bugün
+    // TC Kimlik No ile gelebilir), müşteri kaydına (her iki alandan da) göre doğrulanır.
+    private async Task<bool> SahibiMiAsync(Siparis siparis, string? vergiNo)
+    {
+        vergiNo = (vergiNo ?? string.Empty).Trim();
+        if (vergiNo.Length == 0) return false;
+
+        var musteri = await _db.Musteriler
+            .FirstOrDefaultAsync(m => m.Aktif && (m.VergiNumarasi == vergiNo || m.TcKimlikNo == vergiNo));
+        return musteri != null && siparis.MusteriId == musteri.Id;
+    }
+
     public async Task<IActionResult> OnGetAsync()
     {
         var siparis = await _db.Siparisler
@@ -53,8 +65,7 @@ public class DuzenleModel : PageModel
             .FirstOrDefaultAsync(s => s.Id == Id);
         if (siparis == null) return NotFound();
 
-        var vergiNo = (VergiNo ?? string.Empty).Trim();
-        if (vergiNo.Length == 0 || siparis.VergiNumarasi != vergiNo)
+        if (!await SahibiMiAsync(siparis, VergiNo))
         {
             return NotFound();
         }
@@ -110,8 +121,7 @@ public class DuzenleModel : PageModel
         var siparis = await _db.Siparisler.Include(s => s.Satirlar).FirstOrDefaultAsync(s => s.Id == Id);
         if (siparis == null) return NotFound();
 
-        var vergiNo = (VergiNo ?? string.Empty).Trim();
-        if (vergiNo.Length == 0 || siparis.VergiNumarasi != vergiNo || siparis.Durum == SiparisDurumu.Reddedildi)
+        if (siparis.Durum == SiparisDurumu.Reddedildi || !await SahibiMiAsync(siparis, VergiNo))
         {
             return NotFound();
         }

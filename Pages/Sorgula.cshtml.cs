@@ -27,8 +27,19 @@ public class SorgulaModel : PageModel
             return new JsonResult(new { siparisler = Array.Empty<object>() });
         }
 
+        // Siparis.VergiNumarasi, sipariş verildiği anda YAZILAN metnin ham kopyasıdır - müşteri
+        // bazen Vergi No, bazen TC Kimlik No ile arayabilir. Bunun yerine önce müşteriyi (her iki
+        // alandan da) bulup MusteriId'ye göre eşleştiriyoruz, böylece hangi numarayla sipariş
+        // verildiğinden bağımsız olarak tüm siparişleri görebilir.
+        var musteri = await _db.Musteriler
+            .FirstOrDefaultAsync(m => m.Aktif && (m.VergiNumarasi == vergiNo || m.TcKimlikNo == vergiNo));
+        if (musteri == null)
+        {
+            return new JsonResult(new { siparisler = Array.Empty<object>() });
+        }
+
         var siparisler = await _db.Siparisler
-            .Where(s => s.VergiNumarasi == vergiNo)
+            .Where(s => s.MusteriId == musteri.Id)
             .Include(s => s.Satirlar)
             .OrderByDescending(s => s.OlusturmaTarihi)
             .ToListAsync();
