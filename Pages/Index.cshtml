@@ -34,35 +34,37 @@
             </div>
 
             <div class="col-lg-4">
-                <div class="card sticky-top" style="top: 1rem;">
-                    <div class="card-header">
-                        <strong>Sepetiniz</strong>
+                <div class="sticky-top" style="top: 1rem;">
+                    <div class="card">
+                        <div class="card-header">
+                            <strong>Sepetiniz</strong>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="sepet-bos" class="p-3 text-muted">Sepetiniz boş.</div>
+                            <table class="table table-sm mb-0" id="sepet-tablo" style="display: none;">
+                                <tbody id="sepet-govde"></tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between align-items-center">
+                            <strong>Toplam</strong>
+                            <strong id="sepet-toplam">0,00 ₺</strong>
+                        </div>
                     </div>
-                    <div class="card-body p-0">
-                        <div id="sepet-bos" class="p-3 text-muted">Sepetiniz boş.</div>
-                        <table class="table table-sm mb-0" id="sepet-tablo" style="display: none;">
-                            <tbody id="sepet-govde"></tbody>
-                        </table>
+
+                    <div id="sepet-hidden-inputs"></div>
+
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Not (opsiyonel)</label>
+                        <textarea asp-for="Aciklama" id="aciklama" class="form-control" rows="2"></textarea>
                     </div>
-                    <div class="card-footer d-flex justify-content-between align-items-center">
-                        <strong>Toplam</strong>
-                        <strong id="sepet-toplam">0,00 ₺</strong>
+
+                    <!-- Honeypot: gerçek kullanıcılar bu alanı görmez -->
+                    <div style="position: absolute; left: -9999px;" aria-hidden="true">
+                        <input type="text" asp-for="WebSitesi" tabindex="-1" autocomplete="off" />
                     </div>
+
+                    <button type="submit" id="gonder-btn" class="btn btn-primary w-100" disabled>Siparişi Gönder</button>
                 </div>
-
-                <div id="sepet-hidden-inputs"></div>
-
-                <div class="mb-3 mt-3">
-                    <label class="form-label">Not (opsiyonel)</label>
-                    <textarea asp-for="Aciklama" id="aciklama" class="form-control" rows="2"></textarea>
-                </div>
-
-                <!-- Honeypot: gerçek kullanıcılar bu alanı görmez -->
-                <div style="position: absolute; left: -9999px;" aria-hidden="true">
-                    <input type="text" asp-for="WebSitesi" tabindex="-1" autocomplete="off" />
-                </div>
-
-                <button type="submit" id="gonder-btn" class="btn btn-primary w-100" disabled>Siparişi Gönder</button>
             </div>
         </div>
     </div>
